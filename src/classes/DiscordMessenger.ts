@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 dotenv.config();
 
-import { Client, Collection, MessageEmbed, TextChannel } from "discord.js";
+import { Client, Collection, Intents, MessageEmbed, TextChannel } from "discord.js";
 import { Commands, Command } from "../types/Command";
 
 const DEFAULT_COOLDOWN_DURATION = 15 * 60 * 1000; // 15 minute cooldown
@@ -34,7 +34,7 @@ class DiscordMessenger {
 
   private createBot(botCommands: Commands = {}) {
     const prefix = process.env.DM_COMMAND_PREFIX || "!";
-    const bot = new Client();
+    const bot = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES] });
     const storedBotCommands = new Collection();
 
     console.log("Commands: ");
@@ -74,15 +74,14 @@ class DiscordMessenger {
     return bot;
   }
 
-  transmitDeveloperNotification(message: string) {
+  async transmitDeveloperNotification(message: string) {
     // console.log(discordBot.users);
     const user = this.getBot().users.cache.get("142090800279453696");
-    if (user) user.send("[Developer Message]\n" + message);
+    if (user) await user.send("[Developer Message]\n" + message);
     else console.log(`Unable to find developer to transmit the following message: ${message}`)
   }
 
-
-  transmitDiscordNotification(
+  async transmitDiscordNotification(
     author: string,
     message: MessageEmbed | string,
     options?: MessageTransmissionOptions
@@ -93,7 +92,6 @@ class DiscordMessenger {
       // console.log(key + " on cooldown");
       return;
     }
-
     this.onCooldown[key] = true;
 
     setTimeout(() => {
@@ -104,10 +102,10 @@ class DiscordMessenger {
     // transmitToSubscribers(author, message);
 
     // Transmit to servers
-    this.transmitToServers(message, options?.channel);
+    await this.transmitToServers(message, options?.channel);
   }
 
-  transmitToServers(message: MessageEmbed | string, targetChannel?: string) {
+  async transmitToServers(message: MessageEmbed | string, targetChannel?: string) {
     const discordBot = this.getBot();
 
     for (const [_key, guild] of discordBot.guilds.cache) {
@@ -120,7 +118,8 @@ class DiscordMessenger {
           }
         }
       );
-      if (channel && channel.type === "text") {
+
+      if (channel && channel instanceof TextChannel) {
         // Skip non-developer servers when developer mode is on
         if (
           process.env.DM_DEVELOPER_MODE === "on" &&
@@ -130,13 +129,22 @@ class DiscordMessenger {
           )
         )
           continue;
-        if (typeof message === "string") (channel as TextChannel).send(message);
-        else
-          (channel as TextChannel).send(
-            message.url
-              ? `[${message.author?.name}] ${message.title}: ${message.url}`
-              : message
-          );
+
+        if (message instanceof MessageEmbed) {
+          message = message.url
+            ? `[${message.author?.name}] ${message.title}: ${message.url}`
+            : message;
+        }
+
+        try {
+          if (message instanceof MessageEmbed) {
+            await channel.send({ embeds: [message] });
+          } else {
+            await channel.send(message);
+          }
+        } catch (error) {
+          console.log(`Unable to transmit message to servers: ${message}`)
+        }
       }
     }
   }
