@@ -26,7 +26,7 @@ class DiscordMessenger {
   }
 
   private createBot(botCommands: Commands = {}) {
-    const prefix = process.env.BOT_PREFIX || "!";
+    const prefix = process.env.DM_COMMAND_PREFIX || "!";
     const bot = new Client();
     const storedBotCommands = new Collection();
 
@@ -37,9 +37,9 @@ class DiscordMessenger {
       storedBotCommands.set(prefix + name, botCommands[key]);
     });
 
-    const TOKEN = process.env.TOKEN;
+    const DM_BOT_TOKEN = process.env.DM_BOT_TOKEN;
 
-    bot.login(TOKEN);
+    bot.login(DM_BOT_TOKEN);
 
     bot.on("ready", () => {
       console.info(`Logged in as ${bot.user!.tag}!`);
@@ -116,7 +116,7 @@ class DiscordMessenger {
       if (channel && channel.type === "text") {
         // Skip non-developer servers when developer mode is on
         if (
-          process.env.DEVELOPER_MODE === "on" &&
+          process.env.DM_DEVELOPER_MODE === "on" &&
           !(
             channel.guild.id === "757705063878623343" ||
             channel.guild.id === "757774890366664774"
