@@ -2,13 +2,13 @@ import dotenv from "dotenv";
 dotenv.config();
 
 import { Client, Collection, MessageEmbed, TextChannel } from "discord.js";
-import { Commands, Command } from "@app/types/Command";
+import { Commands, Command } from "../types/Command";
 
 class DiscordMessenger {
 
   private static discordMessenger: DiscordMessenger;
 
-  static getMessenger() {
+  public static getMessenger() {
     if (this.discordMessenger) return this.discordMessenger;
     else this.discordMessenger = new DiscordMessenger();
     return this.discordMessenger;

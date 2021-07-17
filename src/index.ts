@@ -1,3 +1,3 @@
-export { default as DiscordMessenger } from "@app/classes/DiscordMessenger"
-export { default as createEmbed } from "@app/util/createEmbed"
-export * from "@app/types/Command"
+export { default as DiscordMessenger } from "./classes/DiscordMessenger"
+export { default as createEmbed } from "./util/createEmbed"
+export * from "./types/Command"

@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "A wrapper around the discord package",
   "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "typings": "types/index.d.ts",
   "files": [
     "dist"
   ],
