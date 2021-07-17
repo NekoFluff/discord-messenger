@@ -1,6 +1,6 @@
 {
   "name": "discord-messenger",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "A wrapper around the discord package",
   "main": "dist/index.js",
   "typings": "types/index.d.ts",

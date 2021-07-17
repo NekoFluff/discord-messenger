@@ -116,7 +116,7 @@ class DiscordMessenger {
           if (targetChannel) {
             return ch.name === targetChannel
           } else {
-            return ch.name === process.env.DEFAULT_CHANNEL_NAME ?? "general"
+            return ch.name === process.env.DM_DEFAULT_CHANNEL_NAME ?? "general"
           }
         }
       );
