@@ -4,6 +4,14 @@ dotenv.config();
 import { Client, Collection, MessageEmbed, TextChannel } from "discord.js";
 import { Commands, Command } from "../types/Command";
 
+const DEFAULT_COOLDOWN_DURATION = 15 * 60 * 1000; // 15 minute cooldown
+
+export type MessageTransmissionOptions = {
+  cooldownDuration?: number,
+  cooldownKey?: string,
+  channel?: string
+}
+
 class DiscordMessenger {
 
   private static discordMessenger: DiscordMessenger;
@@ -17,7 +25,6 @@ class DiscordMessenger {
   private bot?: Client;
 
   private onCooldown: { [key: string]: boolean } = {};
-  private cooldownTimer = 15 * 60 * 1000; // 15 minute cooldown
 
   getBot(botCommands: Commands = {}) {
     if (this.bot) return this.bot;
@@ -71,36 +78,36 @@ class DiscordMessenger {
     // console.log(discordBot.users);
     const user = this.getBot().users.cache.get("142090800279453696");
     if (user) user.send("[Developer Message]\n" + message);
-    else console.log('Unable to find developer to transmit message to')
+    else console.log(`Unable to find developer to transmit the following message: ${message}`)
   }
 
 
   transmitDiscordNotification(
     author: string,
-    embed: MessageEmbed | string,
-    cooldownKey?: string,
-    channel?: string
+    message: MessageEmbed | string,
+    options?: MessageTransmissionOptions
   ) {
-    const key = cooldownKey || author + embed.toString();
+    const key = options?.cooldownKey || author + message.toString();
 
-    if (cooldownKey != "disabled" && this.onCooldown[key] === true) {
+    if (key != "disabled" && this.onCooldown[key] === true) {
       // console.log(key + " on cooldown");
       return;
     }
+
     this.onCooldown[key] = true;
 
     setTimeout(() => {
       this.onCooldown[key] = false;
-    }, this.cooldownTimer);
+    }, options?.cooldownDuration ?? DEFAULT_COOLDOWN_DURATION);
 
     // Transmit to subscribers
-    // transmitToSubscribers(author, embed);
+    // transmitToSubscribers(author, message);
 
     // Transmit to servers
-    this.transmitToServers(embed, channel);
+    this.transmitToServers(message, options?.channel);
   }
 
-  transmitToServers(embed: MessageEmbed | string, targetChannel?: string) {
+  transmitToServers(message: MessageEmbed | string, targetChannel?: string) {
     const discordBot = this.getBot();
 
     for (const [_key, guild] of discordBot.guilds.cache) {
@@ -109,7 +116,7 @@ class DiscordMessenger {
           if (targetChannel) {
             return ch.name === targetChannel
           } else {
-            return ch.name === "coinbase-notifications"
+            return ch.name === process.env.DEFAULT_CHANNEL_NAME ?? "general"
           }
         }
       );
@@ -123,12 +130,12 @@ class DiscordMessenger {
           )
         )
           continue;
-        if (typeof embed === "string") (channel as TextChannel).send(embed);
+        if (typeof message === "string") (channel as TextChannel).send(message);
         else
           (channel as TextChannel).send(
-            embed.url
-              ? `[${embed.author?.name}] ${embed.title}: ${embed.url}`
-              : embed
+            message.url
+              ? `[${message.author?.name}] ${message.title}: ${message.url}`
+              : message
           );
       }
     }
