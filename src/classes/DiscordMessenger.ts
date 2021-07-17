@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 dotenv.config();
 
-import { Client, Collection, Intents, MessageEmbed, TextChannel } from "discord.js";
+import { Client, Collection, Intents, MessageEmbed, TextChannel, User } from "discord.js";
 import { Commands, Command } from "../types/Command";
 
 const DEFAULT_COOLDOWN_DURATION = 15 * 60 * 1000; // 15 minute cooldown
@@ -9,7 +9,8 @@ const DEFAULT_COOLDOWN_DURATION = 15 * 60 * 1000; // 15 minute cooldown
 export type MessageTransmissionOptions = {
   cooldownDuration?: number,
   cooldownKey?: string,
-  channel?: string
+  channel?: string,
+  users?: User[]
 }
 
 class DiscordMessenger {
@@ -76,7 +77,7 @@ class DiscordMessenger {
 
   async transmitDeveloperNotification(message: string) {
     // console.log(discordBot.users);
-    const user = this.getBot().users.cache.get("142090800279453696");
+    const user = await this.getBot().users.fetch("142090800279453696");
     if (user) await user.send("[Developer Message]\n" + message);
     else console.log(`Unable to find developer to transmit the following message: ${message}`)
   }
@@ -98,11 +99,33 @@ class DiscordMessenger {
       this.onCooldown[key] = false;
     }, options?.cooldownDuration ?? DEFAULT_COOLDOWN_DURATION);
 
-    // Transmit to subscribers
-    // transmitToSubscribers(author, message);
+    // Transmit to users
+    if (options?.users) {
+      await this.transmitToUsers(message, options.users);
+    }
 
     // Transmit to servers
     await this.transmitToServers(message, options?.channel);
+  }
+
+  async transmitToUsers(message: MessageEmbed | string, users: User[]) {
+    if (message instanceof MessageEmbed) {
+      message = message.url
+        ? `[${message.author?.name}] ${message.title}: ${message.url}`
+        : message;
+    }
+
+    try {
+      for (const user of users) {
+        if (message instanceof MessageEmbed) {
+          await user.send({ embeds: [message] });
+        } else {
+          await user.send(message);
+        }
+      }
+    } catch (error) {
+      console.log(`Unable to transmit message to servers: ${message}`)
+    }
   }
 
   async transmitToServers(message: MessageEmbed | string, targetChannel?: string) {
