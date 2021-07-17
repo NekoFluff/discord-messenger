@@ -50,7 +50,7 @@ class DiscordMessenger {
 
     bot.on("ready", () => {
       console.info(`Logged in as ${bot.user!.tag}!`);
-      this.transmitToServers(`${bot.user!.tag} is now operational!`, "auto-trader")
+      this.transmitToServers(`${bot.user!.tag} is now operational!`)
       this.transmitDeveloperNotification(`${bot.user!.tag} is now operational!`)
     });
 
