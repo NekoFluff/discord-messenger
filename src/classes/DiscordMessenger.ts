@@ -1,6 +1,3 @@
-import dotenv from "dotenv";
-dotenv.config();
-
 import { Client, Collection, Intents, MessageEmbed, TextChannel, User } from "discord.js";
 import { Commands, Command } from "../types/Command";
 
@@ -13,19 +10,32 @@ export type MessageTransmissionOptions = {
   users?: User[]
 }
 
+export type DiscordMessengerOptions = {
+  defaultChannelName: string,
+  commandPrefix: string,
+  token: string,
+  developerMode: boolean
+}
+
 class DiscordMessenger {
 
   private static discordMessenger: DiscordMessenger;
 
-  public static getMessenger() {
+  public static getMessenger(options?: DiscordMessengerOptions) {
     if (this.discordMessenger) return this.discordMessenger;
-    else this.discordMessenger = new DiscordMessenger();
+    else this.discordMessenger = new DiscordMessenger(options);
+    if (options) this.discordMessenger.options = options;
     return this.discordMessenger;
   }
 
-  private bot?: Client;
-
+  private options?: DiscordMessengerOptions
+  private bot?: Client
   private onCooldown: { [key: string]: boolean } = {};
+
+
+  constructor(options?: DiscordMessengerOptions) {
+    this.options = options;
+  }
 
   getBot(botCommands: Commands = {}) {
     if (this.bot) return this.bot;
@@ -34,7 +44,7 @@ class DiscordMessenger {
   }
 
   private createBot(botCommands: Commands = {}) {
-    const prefix = process.env.DM_COMMAND_PREFIX || "!";
+    const prefix = this.options?.commandPrefix || "!";
     const bot = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES] });
     const storedBotCommands = new Collection();
 
@@ -45,9 +55,7 @@ class DiscordMessenger {
       storedBotCommands.set(prefix + name, botCommands[key]);
     });
 
-    const DM_BOT_TOKEN = process.env.DM_BOT_TOKEN;
-
-    bot.login(DM_BOT_TOKEN);
+    bot.login(this.options?.token);
 
     bot.on("ready", () => {
       console.info(`Logged in as ${bot.user!.tag}!`);
@@ -77,7 +85,7 @@ class DiscordMessenger {
 
   async transmitDeveloperNotification(message: string) {
     // console.log(discordBot.users);
-    if (process.env.DM_DEVELOPER_MODE === "off") return;
+    if (!this.options?.developerMode) return;
 
     const user = await this.getBot().users.fetch("142090800279453696");
     if (user) await user.send("[Developer Message]\n" + message);
@@ -117,7 +125,7 @@ class DiscordMessenger {
         : message;
     }
 
-    if (process.env.DM_DEVELOPER_MODE === "on") return;
+    if (this.options?.developerMode) return;
 
     try {
       for (const user of users) {
@@ -141,7 +149,7 @@ class DiscordMessenger {
           if (targetChannel) {
             return ch.name === targetChannel
           } else {
-            return ch.name === process.env.DM_DEFAULT_CHANNEL_NAME ?? "general"
+            return ch.name === this.options?.defaultChannelName ?? "general"
           }
         }
       );
@@ -149,7 +157,7 @@ class DiscordMessenger {
       if (channel && channel instanceof TextChannel) {
         // Skip non-developer servers when developer mode is on
         if (
-          process.env.DM_DEVELOPER_MODE === "on" &&
+          this.options?.developerMode &&
           !(
             channel.guild.id === "757705063878623343"
           )

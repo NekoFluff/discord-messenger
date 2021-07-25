@@ -1,6 +1,6 @@
 {
   "name": "discord-messenger",
-  "version": "1.2.0",
+  "version": "2.0.0",
   "description": "A wrapper around the discord package",
   "main": "dist/index.js",
   "typings": "types/index.d.ts",
@@ -28,7 +28,6 @@
   },
   "dependencies": {
     "discord.js": "^13.0.0-dev.4d53d0f.1626523373",
-    "dotenv": "^10.0.0",
     "ffmpeg-static": "^4.4.0"
   },
   "bugs": {
