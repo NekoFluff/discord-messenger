@@ -22,8 +22,7 @@ class DiscordMessenger {
   private static discordMessenger: DiscordMessenger;
 
   public static getMessenger(options?: DiscordMessengerOptions) {
-    if (this.discordMessenger) return this.discordMessenger;
-    else this.discordMessenger = new DiscordMessenger(options);
+    if (!this.discordMessenger) this.discordMessenger = new DiscordMessenger(options);
 
     if (options) this.discordMessenger.options = options;
 
@@ -41,8 +40,7 @@ class DiscordMessenger {
   }
 
   getBot(commands: Commands = {}) {
-    if (this.bot) return this.bot;
-    else this.bot = this.createBot()
+    if (!this.bot) this.bot = this.createBot()
 
     this.setCommands(commands);
 
