@@ -39,10 +39,10 @@ class DiscordMessenger {
     this.storedCommands = new Collection();
   }
 
-  getBot(commands: Commands = {}) {
+  getBot(commands?: Commands) {
     if (!this.bot) this.bot = this.createBot()
 
-    this.setCommands(commands);
+    if (commands) this.setCommands(commands);
 
     return this.bot;
   }
