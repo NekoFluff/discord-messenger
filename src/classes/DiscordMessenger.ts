@@ -24,36 +24,45 @@ class DiscordMessenger {
   public static getMessenger(options?: DiscordMessengerOptions) {
     if (this.discordMessenger) return this.discordMessenger;
     else this.discordMessenger = new DiscordMessenger(options);
+
     if (options) this.discordMessenger.options = options;
+
     return this.discordMessenger;
   }
 
+  private storedCommands: Collection<string, Command>
   private options?: DiscordMessengerOptions
   private bot?: Client
   private onCooldown: { [key: string]: boolean } = {};
 
-
   constructor(options?: DiscordMessengerOptions) {
     this.options = options;
+    this.storedCommands = new Collection();
   }
 
-  getBot(botCommands: Commands = {}) {
+  getBot(commands: Commands = {}) {
     if (this.bot) return this.bot;
-    else this.bot = this.createBot(botCommands)
+    else this.bot = this.createBot()
+
+    this.setCommands(commands);
+
     return this.bot;
   }
 
-  private createBot(botCommands: Commands = {}) {
+  private setCommands(commands: Commands) {
     const prefix = this.options?.commandPrefix || "!";
-    const bot = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES] });
-    const storedBotCommands = new Collection();
+    this.storedCommands = new Collection();
 
     console.log("Commands: ");
-    Object.keys(botCommands).map((key: string) => {
-      const name = botCommands[key].name.toLocaleLowerCase();
+    Object.keys(commands).map((key: string) => {
+      const name = commands[key].name.toLocaleLowerCase();
       console.log(prefix + name);
-      storedBotCommands.set(prefix + name, botCommands[key]);
+      this.storedCommands.set(prefix + name, commands[key]);
     });
+  }
+
+  private createBot() {
+    const bot = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES] });
 
     bot.login(this.options?.token);
 
@@ -68,11 +77,11 @@ class DiscordMessenger {
       let command = args.shift() || "";
       command = command.toLocaleLowerCase();
 
-      if (!storedBotCommands.has(command)) return;
+      if (!this.storedCommands.has(command)) return;
       console.info(`Executing: ${command}`);
 
       try {
-        const storedCommand = storedBotCommands.get(command) as Command;
+        const storedCommand = this.storedCommands.get(command) as Command;
         storedCommand.execute(msg, args);
       } catch (error) {
         console.error(error);
