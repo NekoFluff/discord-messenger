@@ -77,6 +77,8 @@ class DiscordMessenger {
 
   async transmitDeveloperNotification(message: string) {
     // console.log(discordBot.users);
+    if (process.env.DM_DEVELOPER_MODE === "off") return;
+
     const user = await this.getBot().users.fetch("142090800279453696");
     if (user) await user.send("[Developer Message]\n" + message);
     else console.log(`Unable to find developer to transmit the following message: ${message}`)
@@ -115,6 +117,8 @@ class DiscordMessenger {
         : message;
     }
 
+    if (process.env.DM_DEVELOPER_MODE === "on") return;
+
     try {
       for (const user of users) {
         if (message instanceof MessageEmbed) {
@@ -147,8 +151,7 @@ class DiscordMessenger {
         if (
           process.env.DM_DEVELOPER_MODE === "on" &&
           !(
-            channel.guild.id === "757705063878623343" ||
-            channel.guild.id === "757774890366664774"
+            channel.guild.id === "757705063878623343"
           )
         )
           continue;
