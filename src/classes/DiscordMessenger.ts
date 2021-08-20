@@ -163,27 +163,27 @@ class DiscordMessenger {
 
       if (channel && channel instanceof TextChannel) {
         // Skip non-developer servers when developer mode is on
-        if (
-          this.options?.developerMode &&
-          !(
-            channel.guild.id === "757705063878623343"
-          )
-        )
+        if (this.options?.developerMode && !(channel.guild.id === "757705063878623343")) {
           continue;
-
-        if (message instanceof MessageEmbed) {
-          message = message.url
-            ? `[${message.author?.name}] ${message.title}: ${message.url}`
-            : message;
         }
 
+        // if (message instanceof MessageEmbed) {
+        //   message = message.url
+        //     ? `[${message.author?.name}] ${message.title}: ${message.url}`
+        //     : message;
+        // }
+
         try {
-          if (message instanceof MessageEmbed) {
-            await channel.send({ embeds: [message] });
-          } else {
+          if (typeof message === "string") {
+            console.log('Sending message');
+            console.log(message);
             await channel.send(message);
+          } else {
+            console.log('Sending embed');
+            await channel.send({ embeds: [message] });
           }
         } catch (error) {
+          console.log(error);
           console.log(`Unable to transmit message to servers: ${message}`)
         }
       }
